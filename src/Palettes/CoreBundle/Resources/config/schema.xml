@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<database
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="http://xsd.propelorm.org/1.7/database.xsd"
+    name="default" 
+    namespace="Palettes\CoreBundle\Model"
+    defaultIdMethod="native">
+    
+    <table name="color">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
+        <column name="name" type="varchar" size="128" />
+        <column name="value" type="varchar" size="6" />
+        <column name="palette_id" type="integer" />
+        
+        <foreign-key foreignTable="palette">
+            <reference local="palette_id" foreign="id" />
+        </foreign-key>
+    </table>
+
+    <table name="palette">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
+        <column name="name" type="varchar" size="256" />
+        <column name="description" type="varchar" size="1024" />
+    </table>
+        
+</database>    

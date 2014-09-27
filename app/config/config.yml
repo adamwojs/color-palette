@@ -60,6 +60,15 @@ doctrine:
         auto_generate_proxy_classes: "%kernel.debug%"
         auto_mapping: true
 
+propel:
+    dbal:
+        driver:               %database_driver%
+        user:                 %database_user%
+        password:             %database_password%
+        dsn:                  %database_driver%:host=%database_host%;dbname=%database_name%;charset=UTF8
+        options:              {}
+        attributes:           {}
+
 # Swiftmailer Configuration
 swiftmailer:
     transport: "%mailer_transport%"
