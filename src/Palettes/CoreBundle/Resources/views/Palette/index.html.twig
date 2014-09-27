@@ -1,0 +1,12 @@
+<h1>Lista palet</h1>
+
+{% if palettes %}
+    <ul>
+        {% for palette in palettes %}
+        <li>
+            <h3>{{ palette.name }}</h3>
+            <p>{{ palette.description }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+{% endif %}
