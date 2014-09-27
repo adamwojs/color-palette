@@ -1,0 +1,5 @@
+palettes_core:
+    resource: "@PalettesCoreBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
