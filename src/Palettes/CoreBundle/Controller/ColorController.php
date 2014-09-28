@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Palettes\CoreBundle\Form\Type\ColorType;
 use Palettes\CoreBundle\Model\PaletteQuery;
 use Palettes\CoreBundle\Model\Color;
@@ -27,6 +28,7 @@ class ColorController extends Controller {
      * @Route("/new", name="color_new")
      * @Method("GET")
      * @Template()
+     * @Security("is_granted('ROLE_USER')")
      */
     public function newAction(Request $request) {
         $color = new Color();
@@ -44,6 +46,7 @@ class ColorController extends Controller {
      * @Route("/", name="color_create")
      * @Method("POST")
      * @Template("PalettesCoreBundle:Color:new.html.twig")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function createAction(Request $request) {
         $color = new Color();
@@ -70,6 +73,7 @@ class ColorController extends Controller {
      * @Route("/{id}/edit", name="color_edit")
      * @Method("GET")
      * @ParamConverter("color", class="Palettes\CoreBundle\Model\Color")
+     * @Security("is_granted('ROLE_USER')")
      * @Template()
      */
     public function editAction(Request $request, Color $color) {
@@ -85,6 +89,7 @@ class ColorController extends Controller {
      * @Route("/{id}", name="color_update")
      * @Method("PUT")
      * @ParamConverter("color", class="Palettes\CoreBundle\Model\Color")
+     * @Security("is_granted('ROLE_USER')")
      * @Template("ColorsCoreBundle:Color:edit.html.twig")
      */
     public function updateAction(Request $request, Color $color) {
@@ -110,6 +115,7 @@ class ColorController extends Controller {
      * 
      * @Route("/{id}", name="color_delete")
      * @Method("DELETE")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function deleteAction(Request $request, Color $color) {
         $form = $this->createDeleteForm($color);

@@ -8,6 +8,7 @@
         <h1>{{ palette.name }}</h1>
         {{ colorbar(palette.colors) }}
         
+        {% if is_granted('ROLE_USER') %}
         <div class="btn-inline-toolbar pull-right">
         {{ form_start(delete_form) }}
             <div class="btn-group">
@@ -23,7 +24,8 @@
             </div>
             {{ form_widget(delete_form._token) }}
         {{ form_end(delete_form, {'render_rest': false}) }}            
-        </div>            
+        </div>          
+        {% endif %}
     </div>
     {% if palette.description %}
         <p class="lead">{{ palette.description }}</p>

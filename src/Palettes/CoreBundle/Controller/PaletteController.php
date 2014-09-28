@@ -8,6 +8,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Palettes\CoreBundle\Form\Type\PaletteType;
 use Palettes\CoreBundle\Model\Palette;
 use Palettes\CoreBundle\Model\PaletteQuery;
@@ -42,6 +43,7 @@ class PaletteController extends Controller {
      * 
      * @Route("/new", name="palette_new")
      * @Method({"GET"})
+     * @Security("is_granted('ROLE_USER')")
      * @Template()
      */
     public function newAction() {
@@ -59,6 +61,7 @@ class PaletteController extends Controller {
      * @Route("/", name="palette_create")
      * @Method("POST")
      * @Template("PalettesCoreBundle:Palette:new.html.twig")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function createAction(Request $request) {
         $palette = new Palette();
@@ -97,6 +100,7 @@ class PaletteController extends Controller {
      * @Route("/{id}/edit", name="palette_edit")
      * @Method("GET")
      * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
+     * @Security("is_granted('ROLE_USER')")
      * @Template()
      */
     public function editAction(Palette $palette) {
@@ -112,6 +116,7 @@ class PaletteController extends Controller {
      * @Route("/{id}", name="palette_update")
      * @Method("PUT")
      * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
+     * @Security("is_granted('ROLE_USER')")
      * @Template("PalettesCoreBundle:Palette:edit.html.twig")
      */
     public function updateAction(Request $request, Palette $palette) {
@@ -136,6 +141,7 @@ class PaletteController extends Controller {
      * @Route("/{id}", name="palette_delete")
      * @Method("DELETE")
      * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
+     * @Security("is_granted('ROLE_USER')")
      */
     public function deleteAction(Request $request, Palette $palette) {
         $form = $this->createDeleteForm($palette);
