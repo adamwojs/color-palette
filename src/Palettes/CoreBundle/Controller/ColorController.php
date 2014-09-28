@@ -8,164 +8,142 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
-use Palettes\CoreBundle\Form\Type\PaletteType;
-use Palettes\CoreBundle\Model\Palette;
+use Palettes\CoreBundle\Form\Type\ColorType;
 use Palettes\CoreBundle\Model\PaletteQuery;
+use Palettes\CoreBundle\Model\Color;
 
 /**
- * PaletteController
+ * ColorController
  *
  * @author Adam Wójs <adam@wojs.pl>
  * 
- * @Route("/palette")
+ * @Route("/palette/{paletteId}/color")
  */
-class PaletteController extends Controller {
+class ColorController extends Controller {
     
     /**
-     * Akacja wyświetlająca indeks palet.
+     * Dodaje nowy kolor do palety.
      * 
-     * @Route("/", name="palette_index")
-     * @Method({"GET"})
+     * @Route("/new", name="color_new")
+     * @Method("GET")
      * @Template()
      */
-    public function indexAction() {
-        $palettes = PaletteQuery::create()
-            ->find();
+    public function newAction(Request $request) {
+        $color = new Color();
+        $color->setPalette($this->getPaletteFromRequest($request));
+        
+        $form = $this->createCreateForm($color);
         
         return [
-            'palettes' => $palettes
+            'form' => $form->createView(),
+            'color' => $color
         ];
     }
     
     /**
-     * Tworzenie nowej palety.
-     * 
-     * @Route("/new", name="palette_new")
-     * @Method({"GET"})
-     * @Template()
-     */
-    public function newAction() {
-        $palette = new Palette();
-        
-        $form = $this->createCreateForm($palette);
-        
-        return [
-            'form'    => $form->createView(),
-            'palette' => $palette
-        ];
-    }
-    
-    /**
-     * @Route("/", name="palette_create")
+     * @Route("/", name="color_create")
      * @Method("POST")
-     * @Template("PalettesCoreBundle:Palette:new.html.twig")
+     * @Template("PalettesCoreBundle:Color:new.html.twig")
      */
     public function createAction(Request $request) {
-        $palette = new Palette();
+        $color = new Color();
+        $color->setPalette($this->getPaletteFromRequest($request));
         
-        $form = $this->createCreateForm($palette);
+        $form = $this->createCreateForm($color);
         $form->handleRequest($request);
         
         if($form->isValid()) {
-            $palette->save();
+            $color->save();
             
-            return $this->redirect($this->generateUrl("palette_index"));
+            return $this->redirect($this->generateUrl("palette_show", [
+                'id' => $color->getPaletteId()
+            ]));
         }
         
         return [
             'form' => $form->createView(),
-            'palette' => $palette
+            'color' => $color
         ];
     }
 
     /**
-     * @Route("/{id}", name="palette_show")
+     * @Route("/{id}/edit", name="color_edit")
      * @Method("GET")
-     * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
+     * @ParamConverter("color", class="Palettes\CoreBundle\Model\Color")
      * @Template()
      */
-    public function showAction(Palette $palette) {
-        $deleteForm = $this->createDeleteForm($palette);
-        
-        return [
-            'palette' => $palette,
-            'delete_form' => $deleteForm->createView()
-        ];
-    }
-    
-    /**
-     * @Route("/{id}/edit", name="pallete_edit")
-     * @Method("GET")
-     * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
-     * @Template()
-     */
-    public function editAction(Palette $palette) {
-        $form = $this->createEditForm($palette);
+    public function editAction(Request $request, Color $color) {
+        $form = $this->createEditForm($color);
         
         return [
             'form' => $form->createView(),
-            'palette' => $palette
+            'color' => $color
         ];
     }
     
     /**
-     * @Route("/{id}", name="palette_update")
+     * @Route("/{id}", name="color_update")
      * @Method("PUT")
-     * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
-     * @Template("PalettesCoreBundle:Palette:edit.html.twig")
+     * @ParamConverter("color", class="Palettes\CoreBundle\Model\Color")
+     * @Template("ColorsCoreBundle:Color:edit.html.twig")
      */
-    public function updateAction(Request $request, Palette $palette) {
-        $form = $this->createEditForm($palette);
+    public function updateAction(Request $request, Color $color) {
+        $form = $this->createEditForm($color);
         $form->handleRequest($request);
         
         if($form->isValid()) {
-            $palette->save();
+            $color->save();
             
-            return $this->redirect($this->generateUrl("palette_index"));
+            return $this->redirect($this->generateUrl("palette_show", [
+                'id' => $color->getPaletteId()
+            ]));
         }
         
         return [
             'form' => $form->createView(),
-            'palette' => $palette
+            'color' => $color
         ];
     }
     
     /**
      * Usuwa palete.
      * 
-     * @Route("/{id}", name="palette_delete")
+     * @Route("/{id}", name="color_delete")
      * @Method("DELETE")
-     * @ParamConverter("palette", class="Palettes\CoreBundle\Model\Palette")
+     * @ParamConverter("color", class="Colors\CoreBundle\Model\Color")
      */
-    public function deleteAction(Request $request, Palette $palette) {
-        $form = $this->createDeleteForm($palette);
+    public function deleteAction(Request $request, Color $color) {
+        $form = $this->createDeleteForm($color);
         $form->handleRequest($request);
         
         if($form->isValid()) {
             // Usuwamy palete
-            $palette->delete();            
+            $color->delete();            
         }
         
-        return $this->redirect($this->generateUrl('palette_index'));
+        return $this->redirect($this->generateUrl('color_index'));
     }
     
-    protected function createCreateForm(Palette $palette) {
-        $form = $this->createForm(new PaletteType(), $palette, [
-            'action' => $this->generateUrl("palette_create"),
+    protected function createCreateForm(Color $color) {
+        $form = $this->createForm(new ColorType(), $color, [
+            'action' => $this->generateUrl("color_create", [
+                'paletteId' => $color->getPaletteId()
+            ]),
             'method' => 'POST'
         ]);
         
         $form->add('submit', 'submit', [
-            'label' => 'Utwórz palete'
+            'label' => 'Dodaj kolor'
         ]);
         
         return $form;
     }
     
-    protected function createEditForm(Palette $palette) {
-        $form = $this->createForm(new PaletteType(), $palette, [
-            'action' => $this->generateUrl("palette_update", [
-                'id' => $palette->getId()
+    protected function createEditForm(Color $color) {
+        $form = $this->createForm(new ColorType(), $color, [
+            'action' => $this->generateUrl("color_update", [
+                'id' => $color->getId(),
+                'paletteId' => $color->getPaletteId()
             ]),
             'method' => 'PUT'
         ]);
@@ -177,13 +155,28 @@ class PaletteController extends Controller {
         return $form;
     }
     
-    protected function createDeleteForm(Palette $palette) {
+    protected function createDeleteForm(Color $color) {
         return $this->createFormBuilder()
-            ->setAction($this->generateUrl("palette_delete", ['id' => $palette->getId()]))
+            ->setAction($this->generateUrl("color_delete", [
+                'id' => $color->getId(),
+                'paletteId' => $color->getPaletteId()
+            ]))
             ->setMethod('DELETE')
             ->add('submit', 'submit', [
                 'label' => 'Usuń'
             ])
             ->getForm();
+    }
+    
+    private function getPaletteFromRequest(Request $request) {
+        $id = $request->get('paletteId');
+        
+        $palette = PaletteQuery::create()
+            ->findPk($id);
+        if(!$palette) {
+            throw $this->createNotFoundException("Palette $id not found!");
+        }
+        
+        return $palette;
     }
 }
