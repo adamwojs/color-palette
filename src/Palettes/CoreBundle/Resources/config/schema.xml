@@ -23,4 +23,12 @@
         <column name="description" type="varchar" size="1024" />
     </table>
         
+    <table name="user">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
+        <column name="username" type="varchar" size="128" />
+        <column name="email" type="varchar" size="128" />
+        <column name="password" type="varchar" size="128" />
+        <column name="salt" type="varchar" size="128" />
+        <column name="role" type="varchar" size="32" />
+    </table>
 </database>    
