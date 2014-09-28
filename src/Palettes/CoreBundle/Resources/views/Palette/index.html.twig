@@ -1,12 +1,33 @@
-<h1>Lista palet</h1>
+{% extends "::base.html.twig" %}
 
-{% if palettes %}
-    <ul>
-        {% for palette in palettes %}
-        <li>
-            <h3>{{ palette.name }}</h3>
-            <p>{{ palette.description }}</p>
-        </li>
-        {% endfor %}
-    </ul>
-{% endif %}
+{% from '::macros.html.twig' import colorbar %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Lista palet</h1>
+    </div>
+
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">Lista palet</h4>
+            <div class="btn-toolbar pull-right">                
+                <a href="{{ url('palette_new') }}" class="btn btn-default">
+                    <i class="glyphicon glyphicon-plus-sign"></i>
+                    Nowa paleta
+                </a>
+            </div>
+        </div>
+
+        {% if palettes %}
+            <div class="list-group">
+                {% for palette in palettes %}
+                <a href="{{ url('palette_show', { id: palette.id }) }}" class="list-group-item">
+                    <h4 class="list-group-item-heading">{{ palette.name }}</h4>
+                    {{ colorbar(palette.colors) }}
+                    <p>{{ palette.description }}</p>
+                </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

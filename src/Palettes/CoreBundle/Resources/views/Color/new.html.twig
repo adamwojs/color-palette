@@ -1,1 +1,17 @@
-{{ form(form) }}
+{% extends '::base.html.twig' %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Dodaj kolor</h1>
+    </div>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>Kolor</h4>
+        </div>
+        
+        <div class="panel-body">
+            {{ form(form) }}
+        </div>
+    </div>
+{% endblock %}

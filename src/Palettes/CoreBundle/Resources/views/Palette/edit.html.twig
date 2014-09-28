@@ -1,1 +1,67 @@
-{{ form(form) }}
+{% extends '::base.html.twig' %}
+
+{% from '::macros.html.twig' import color_preview %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>Edycja palety {{ palette.name }}</h1>
+    </div>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>Informacje o palecie</h4>
+        </div>
+        
+        <div class="panel-body">
+            {{ form(form) }}
+        </div>
+    </div>
+    
+    <div class="panel panel-default">
+        <div class="panel-heading clearfix">
+            <h4 class="pull-left">Lista kolorów</h4>
+            <div class="btn-toolbar pull-right">                
+                <a href="{{ url('color_new', { paletteId: palette.id }) }}" class="btn btn-default">
+                    <i class="glyphicon glyphicon-plus-sign"></i>
+                    Dodaj kolor
+                </a>
+            </div>
+        </div>
+                
+        {% set colors = palette.colors %}
+        {% if colors %}
+            <table class="table table-bordered">
+                <colgroup>
+                    <col width="64" />
+                    <col />
+                    <col width="84"/>
+                </colgroup>
+                
+                <tbody>
+                    {% for color in colors %}
+                    <tr>
+                        <td>{{ color_preview(color, 'sm') }}</td>
+                        <td style="vertical-align: middle">{{ color.name }}</td>
+                        <td>
+                            <form action="{{ url('color_delete', { paletteId: palette.id, id: color.id }) }}" 
+                                  method="post" name="form" >
+                                <input type="hidden" value="DELETE" name="_method" />
+                                
+                                <div class="btn-group">
+                                    <a href="{{ url('color_edit', { paletteId: palette.id, id: color.id }) }}" class="btn btn-sm btn-default">
+                                        <i class="glyphicon glyphicon-pencil"></i>
+                                    </a>
+
+                                    <button name="form[submit]" type="submit" class="btn btn-sm btn-danger">
+                                        <i class="glyphicon glyphicon-trash"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

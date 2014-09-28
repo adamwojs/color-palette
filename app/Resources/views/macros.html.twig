@@ -1,0 +1,19 @@
+{% macro colorbar(colors) %}
+    {% if not colors is empty %}
+        {% set width = 100 / (colors | length) %}
+        <div class="progress" style="height: 8px">
+            {% for color in colors %}
+            <div class="progress-bar" style="background: #{{ color.value }}; width: {{ width }}%;">
+                <span class="sr-only">#{{ color.value }}</span>
+            </div>
+            {% endfor %}
+        </div>    
+    {% endif %}    
+{% endmacro %}
+
+{% macro color_preview(color, size=null) %}
+{% spaceless %}
+<span class="color-preview {% if size %}color-preview-{{size}}{% endif %}" 
+      style="background: #{{ color.value }}"></span>
+{% endspaceless %}
+{% endmacro %}

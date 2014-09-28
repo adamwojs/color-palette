@@ -106,22 +106,20 @@ class ColorController extends Controller {
     }
     
     /**
-     * Usuwa palete.
+     * Usuwamy kolor z palety
      * 
      * @Route("/{id}", name="color_delete")
      * @Method("DELETE")
-     * @ParamConverter("color", class="Colors\CoreBundle\Model\Color")
      */
     public function deleteAction(Request $request, Color $color) {
         $form = $this->createDeleteForm($color);
         $form->handleRequest($request);
         
         if($form->isValid()) {
-            // Usuwamy palete
             $color->delete();            
         }
-        
-        return $this->redirect($this->generateUrl('color_index'));
+       
+        return $this->redirect($this->generateUrl('palette_edit', ['id' => $color->getPaletteId()]));
     }
     
     protected function createCreateForm(Color $color) {
@@ -156,7 +154,9 @@ class ColorController extends Controller {
     }
     
     protected function createDeleteForm(Color $color) {
-        return $this->createFormBuilder()
+        return $this->createFormBuilder(null, [
+                'csrf_protection' => false
+            ])
             ->setAction($this->generateUrl("color_delete", [
                 'id' => $color->getId(),
                 'paletteId' => $color->getPaletteId()

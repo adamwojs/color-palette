@@ -1,3 +1,55 @@
-{{ palette.name }}
+{% extends '::base.html.twig' %}
 
-{{ form(delete_form) }}
+{% from '::macros.html.twig' import colorbar %}
+{% from '::macros.html.twig' import color_preview %}
+
+{% block body %}
+    <div class="page-header">
+        <h1>{{ palette.name }}</h1>
+        {{ colorbar(palette.colors) }}
+        
+        <div class="btn-inline-toolbar pull-right">
+        {{ form_start(delete_form) }}
+            <div class="btn-group">
+                <a href="{{ url('palette_edit', { id: palette.id }) }}" class="btn btn-sm btn-default">
+                    <i class="glyphicon glyphicon-pencil"></i>
+                    Edytuj
+                </a>
+
+                <button name="submit" type="submit" class="btn btn-sm btn-danger">
+                    <i class="glyphicon glyphicon-trash"></i>
+                    Usuń
+                </button>
+            </div>
+            {{ form_widget(delete_form._token) }}
+        {{ form_end(delete_form, {'render_rest': false}) }}            
+        </div>            
+    </div>
+    {% if palette.description %}
+        <p class="lead">{{ palette.description }}</p>
+    {% endif %}
+    
+    <div class="clearfix"></div>
+    
+    {% if not palette.colors is empty %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4>Lista kolorów</h4>
+        </div>
+        
+        <table class="table table-bordered table-condensed">
+            {% for color in palette.colors %}
+            <tr>
+                <td>{{ color_preview(color) }}</td>
+                <td>#{{ color.value }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-warning" role="alert">
+        Ta paleta narazie jest pusta. Przejdź do edycji aby 
+        <a href="{{ url('palette_edit', { id: palette.id }) }}" class="alert-link">zdefiniować kolory</a>.
+    </div>
+    {% endif %}    
+{% endblock %}
