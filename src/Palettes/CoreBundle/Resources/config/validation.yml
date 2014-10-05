@@ -30,8 +30,7 @@ Palettes\CoreBundle\Model\Color:
 Palettes\CoreBundle\Model\User:
         constraints:
             - Propel\PropelBundle\Validator\Constraints\UniqueObject:
-                fields:
-                    username
+                fields: [username, email]
         properties:
             username: 
                 - NotBlank: ~
