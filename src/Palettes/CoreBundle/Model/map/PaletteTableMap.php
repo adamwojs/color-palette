@@ -45,6 +45,7 @@ class PaletteTableMap extends TableMap
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
         $this->addColumn('name', 'Name', 'VARCHAR', false, 256, null);
         $this->addColumn('description', 'Description', 'VARCHAR', false, 1024, null);
+        $this->addForeignKey('user_id', 'UserId', 'INTEGER', 'user', 'id', false, null, null);
         // validators
     } // initialize()
 
@@ -53,6 +54,7 @@ class PaletteTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('User', 'Palettes\\CoreBundle\\Model\\User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), null, null);
         $this->addRelation('Color', 'Palettes\\CoreBundle\\Model\\Color', RelationMap::ONE_TO_MANY, array('id' => 'palette_id', ), null, null, 'Colors');
     } // buildRelations()
 

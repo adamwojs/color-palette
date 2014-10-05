@@ -9,8 +9,12 @@ use \Exception;
 use \PDO;
 use \Persistent;
 use \Propel;
+use \PropelCollection;
 use \PropelException;
+use \PropelObjectCollection;
 use \PropelPDO;
+use Palettes\CoreBundle\Model\Palette;
+use Palettes\CoreBundle\Model\PaletteQuery;
 use Palettes\CoreBundle\Model\User;
 use Palettes\CoreBundle\Model\UserPeer;
 use Palettes\CoreBundle\Model\UserQuery;
@@ -73,6 +77,12 @@ abstract class BaseUser extends BaseObject implements Persistent
     protected $role;
 
     /**
+     * @var        PropelObjectCollection|Palette[] Collection to store aggregation of Palette objects.
+     */
+    protected $collPalettes;
+    protected $collPalettesPartial;
+
+    /**
      * Flag to prevent endless save loop, if this object is referenced
      * by another object which falls in this transaction.
      * @var        boolean
@@ -91,6 +101,12 @@ abstract class BaseUser extends BaseObject implements Persistent
      * @var        boolean
      */
     protected $alreadyInClearAllReferencesDeep = false;
+
+    /**
+     * An array of objects scheduled for deletion.
+     * @var		PropelObjectCollection
+     */
+    protected $palettesScheduledForDeletion = null;
 
     /**
      * Get the [id] column value.
@@ -393,6 +409,8 @@ abstract class BaseUser extends BaseObject implements Persistent
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->collPalettes = null;
+
         } // if (deep)
     }
 
@@ -515,6 +533,24 @@ abstract class BaseUser extends BaseObject implements Persistent
                 }
                 $affectedRows += 1;
                 $this->resetModified();
+            }
+
+            if ($this->palettesScheduledForDeletion !== null) {
+                if (!$this->palettesScheduledForDeletion->isEmpty()) {
+                    foreach ($this->palettesScheduledForDeletion as $palette) {
+                        // need to save related object because we set the relation to null
+                        $palette->save($con);
+                    }
+                    $this->palettesScheduledForDeletion = null;
+                }
+            }
+
+            if ($this->collPalettes !== null) {
+                foreach ($this->collPalettes as $referrerFK) {
+                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
+                        $affectedRows += $referrerFK->save($con);
+                    }
+                }
             }
 
             $this->alreadyInSave = false;
@@ -689,6 +725,14 @@ abstract class BaseUser extends BaseObject implements Persistent
             }
 
 
+                if ($this->collPalettes !== null) {
+                    foreach ($this->collPalettes as $referrerFK) {
+                        if (!$referrerFK->validate($columns)) {
+                            $failureMap = array_merge($failureMap, $referrerFK->getValidationFailures());
+                        }
+                    }
+                }
+
 
             $this->alreadyInValidation = false;
         }
@@ -759,10 +803,11 @@ abstract class BaseUser extends BaseObject implements Persistent
      *                    Defaults to BasePeer::TYPE_PHPNAME.
      * @param     boolean $includeLazyLoadColumns (optional) Whether to include lazy loaded columns. Defaults to true.
      * @param     array $alreadyDumpedObjects List of objects to skip to avoid recursion
+     * @param     boolean $includeForeignObjects (optional) Whether to include hydrated related objects. Default to FALSE.
      *
      * @return array an associative array containing the field names (as keys) and field values
      */
-    public function toArray($keyType = BasePeer::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array())
+    public function toArray($keyType = BasePeer::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
         if (isset($alreadyDumpedObjects['User'][$this->getPrimaryKey()])) {
             return '*RECURSION*';
@@ -782,6 +827,11 @@ abstract class BaseUser extends BaseObject implements Persistent
             $result[$key] = $virtualColumn;
         }
 
+        if ($includeForeignObjects) {
+            if (null !== $this->collPalettes) {
+                $result['Palettes'] = $this->collPalettes->toArray(null, true, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
+            }
+        }
 
         return $result;
     }
@@ -948,6 +998,24 @@ abstract class BaseUser extends BaseObject implements Persistent
         $copyObj->setPassword($this->getPassword());
         $copyObj->setSalt($this->getSalt());
         $copyObj->setRole($this->getRole());
+
+        if ($deepCopy && !$this->startCopy) {
+            // important: temporarily setNew(false) because this affects the behavior of
+            // the getter/setter methods for fkey referrer objects.
+            $copyObj->setNew(false);
+            // store object hash to prevent cycle
+            $this->startCopy = true;
+
+            foreach ($this->getPalettes() as $relObj) {
+                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
+                    $copyObj->addPalette($relObj->copy($deepCopy));
+                }
+            }
+
+            //unflag object copy
+            $this->startCopy = false;
+        } // if ($deepCopy)
+
         if ($makeNew) {
             $copyObj->setNew(true);
             $copyObj->setId(NULL); // this is a auto-increment column, so set to default value
@@ -994,6 +1062,247 @@ abstract class BaseUser extends BaseObject implements Persistent
         return self::$peer;
     }
 
+
+    /**
+     * Initializes a collection based on the name of a relation.
+     * Avoids crafting an 'init[$relationName]s' method name
+     * that wouldn't work when StandardEnglishPluralizer is used.
+     *
+     * @param string $relationName The name of the relation to initialize
+     * @return void
+     */
+    public function initRelation($relationName)
+    {
+        if ('Palette' == $relationName) {
+            $this->initPalettes();
+        }
+    }
+
+    /**
+     * Clears out the collPalettes collection
+     *
+     * This does not modify the database; however, it will remove any associated objects, causing
+     * them to be refetched by subsequent calls to accessor method.
+     *
+     * @return User The current object (for fluent API support)
+     * @see        addPalettes()
+     */
+    public function clearPalettes()
+    {
+        $this->collPalettes = null; // important to set this to null since that means it is uninitialized
+        $this->collPalettesPartial = null;
+
+        return $this;
+    }
+
+    /**
+     * reset is the collPalettes collection loaded partially
+     *
+     * @return void
+     */
+    public function resetPartialPalettes($v = true)
+    {
+        $this->collPalettesPartial = $v;
+    }
+
+    /**
+     * Initializes the collPalettes collection.
+     *
+     * By default this just sets the collPalettes collection to an empty array (like clearcollPalettes());
+     * however, you may wish to override this method in your stub class to provide setting appropriate
+     * to your application -- for example, setting the initial array to the values stored in database.
+     *
+     * @param boolean $overrideExisting If set to true, the method call initializes
+     *                                        the collection even if it is not empty
+     *
+     * @return void
+     */
+    public function initPalettes($overrideExisting = true)
+    {
+        if (null !== $this->collPalettes && !$overrideExisting) {
+            return;
+        }
+        $this->collPalettes = new PropelObjectCollection();
+        $this->collPalettes->setModel('Palette');
+    }
+
+    /**
+     * Gets an array of Palette objects which contain a foreign key that references this object.
+     *
+     * If the $criteria is not null, it is used to always fetch the results from the database.
+     * Otherwise the results are fetched from the database the first time, then cached.
+     * Next time the same method is called without $criteria, the cached collection is returned.
+     * If this User is new, it will return
+     * an empty collection or the current collection; the criteria is ignored on a new object.
+     *
+     * @param Criteria $criteria optional Criteria object to narrow the query
+     * @param PropelPDO $con optional connection object
+     * @return PropelObjectCollection|Palette[] List of Palette objects
+     * @throws PropelException
+     */
+    public function getPalettes($criteria = null, PropelPDO $con = null)
+    {
+        $partial = $this->collPalettesPartial && !$this->isNew();
+        if (null === $this->collPalettes || null !== $criteria  || $partial) {
+            if ($this->isNew() && null === $this->collPalettes) {
+                // return empty collection
+                $this->initPalettes();
+            } else {
+                $collPalettes = PaletteQuery::create(null, $criteria)
+                    ->filterByUser($this)
+                    ->find($con);
+                if (null !== $criteria) {
+                    if (false !== $this->collPalettesPartial && count($collPalettes)) {
+                      $this->initPalettes(false);
+
+                      foreach ($collPalettes as $obj) {
+                        if (false == $this->collPalettes->contains($obj)) {
+                          $this->collPalettes->append($obj);
+                        }
+                      }
+
+                      $this->collPalettesPartial = true;
+                    }
+
+                    $collPalettes->getInternalIterator()->rewind();
+
+                    return $collPalettes;
+                }
+
+                if ($partial && $this->collPalettes) {
+                    foreach ($this->collPalettes as $obj) {
+                        if ($obj->isNew()) {
+                            $collPalettes[] = $obj;
+                        }
+                    }
+                }
+
+                $this->collPalettes = $collPalettes;
+                $this->collPalettesPartial = false;
+            }
+        }
+
+        return $this->collPalettes;
+    }
+
+    /**
+     * Sets a collection of Palette objects related by a one-to-many relationship
+     * to the current object.
+     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
+     * and new objects from the given Propel collection.
+     *
+     * @param PropelCollection $palettes A Propel collection.
+     * @param PropelPDO $con Optional connection object
+     * @return User The current object (for fluent API support)
+     */
+    public function setPalettes(PropelCollection $palettes, PropelPDO $con = null)
+    {
+        $palettesToDelete = $this->getPalettes(new Criteria(), $con)->diff($palettes);
+
+
+        $this->palettesScheduledForDeletion = $palettesToDelete;
+
+        foreach ($palettesToDelete as $paletteRemoved) {
+            $paletteRemoved->setUser(null);
+        }
+
+        $this->collPalettes = null;
+        foreach ($palettes as $palette) {
+            $this->addPalette($palette);
+        }
+
+        $this->collPalettes = $palettes;
+        $this->collPalettesPartial = false;
+
+        return $this;
+    }
+
+    /**
+     * Returns the number of related Palette objects.
+     *
+     * @param Criteria $criteria
+     * @param boolean $distinct
+     * @param PropelPDO $con
+     * @return int             Count of related Palette objects.
+     * @throws PropelException
+     */
+    public function countPalettes(Criteria $criteria = null, $distinct = false, PropelPDO $con = null)
+    {
+        $partial = $this->collPalettesPartial && !$this->isNew();
+        if (null === $this->collPalettes || null !== $criteria || $partial) {
+            if ($this->isNew() && null === $this->collPalettes) {
+                return 0;
+            }
+
+            if ($partial && !$criteria) {
+                return count($this->getPalettes());
+            }
+            $query = PaletteQuery::create(null, $criteria);
+            if ($distinct) {
+                $query->distinct();
+            }
+
+            return $query
+                ->filterByUser($this)
+                ->count($con);
+        }
+
+        return count($this->collPalettes);
+    }
+
+    /**
+     * Method called to associate a Palette object to this object
+     * through the Palette foreign key attribute.
+     *
+     * @param    Palette $l Palette
+     * @return User The current object (for fluent API support)
+     */
+    public function addPalette(Palette $l)
+    {
+        if ($this->collPalettes === null) {
+            $this->initPalettes();
+            $this->collPalettesPartial = true;
+        }
+
+        if (!in_array($l, $this->collPalettes->getArrayCopy(), true)) { // only add it if the **same** object is not already associated
+            $this->doAddPalette($l);
+
+            if ($this->palettesScheduledForDeletion and $this->palettesScheduledForDeletion->contains($l)) {
+                $this->palettesScheduledForDeletion->remove($this->palettesScheduledForDeletion->search($l));
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param	Palette $palette The palette object to add.
+     */
+    protected function doAddPalette($palette)
+    {
+        $this->collPalettes[]= $palette;
+        $palette->setUser($this);
+    }
+
+    /**
+     * @param	Palette $palette The palette object to remove.
+     * @return User The current object (for fluent API support)
+     */
+    public function removePalette($palette)
+    {
+        if ($this->getPalettes()->contains($palette)) {
+            $this->collPalettes->remove($this->collPalettes->search($palette));
+            if (null === $this->palettesScheduledForDeletion) {
+                $this->palettesScheduledForDeletion = clone $this->collPalettes;
+                $this->palettesScheduledForDeletion->clear();
+            }
+            $this->palettesScheduledForDeletion[]= $palette;
+            $palette->setUser(null);
+        }
+
+        return $this;
+    }
+
     /**
      * Clears the current object and sets all attributes to their default values
      */
@@ -1027,10 +1336,19 @@ abstract class BaseUser extends BaseObject implements Persistent
     {
         if ($deep && !$this->alreadyInClearAllReferencesDeep) {
             $this->alreadyInClearAllReferencesDeep = true;
+            if ($this->collPalettes) {
+                foreach ($this->collPalettes as $o) {
+                    $o->clearAllReferences($deep);
+                }
+            }
 
             $this->alreadyInClearAllReferencesDeep = false;
         } // if ($deep)
 
+        if ($this->collPalettes instanceof PropelCollection) {
+            $this->collPalettes->clearIterator();
+        }
+        $this->collPalettes = null;
     }
 
     /**

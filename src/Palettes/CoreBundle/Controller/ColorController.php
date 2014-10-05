@@ -77,6 +77,10 @@ class ColorController extends Controller {
      * @Template()
      */
     public function editAction(Request $request, Color $color) {
+        if(!$color->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createEditForm($color);
         
         return [
@@ -93,6 +97,10 @@ class ColorController extends Controller {
      * @Template("ColorsCoreBundle:Color:edit.html.twig")
      */
     public function updateAction(Request $request, Color $color) {
+        if(!$color->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createEditForm($color);
         $form->handleRequest($request);
         
@@ -118,6 +126,10 @@ class ColorController extends Controller {
      * @Security("is_granted('ROLE_USER')")
      */
     public function deleteAction(Request $request, Color $color) {
+        if(!$color->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createDeleteForm($color);
         $form->handleRequest($request);
         

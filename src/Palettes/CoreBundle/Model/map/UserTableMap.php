@@ -56,6 +56,7 @@ class UserTableMap extends TableMap
      */
     public function buildRelations()
     {
+        $this->addRelation('Palette', 'Palettes\\CoreBundle\\Model\\Palette', RelationMap::ONE_TO_MANY, array('id' => 'user_id', ), null, null, 'Palettes');
     } // buildRelations()
 
 } // UserTableMap

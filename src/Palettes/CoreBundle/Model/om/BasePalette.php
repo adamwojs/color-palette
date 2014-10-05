@@ -18,6 +18,8 @@ use Palettes\CoreBundle\Model\ColorQuery;
 use Palettes\CoreBundle\Model\Palette;
 use Palettes\CoreBundle\Model\PalettePeer;
 use Palettes\CoreBundle\Model\PaletteQuery;
+use Palettes\CoreBundle\Model\User;
+use Palettes\CoreBundle\Model\UserQuery;
 
 abstract class BasePalette extends BaseObject implements Persistent
 {
@@ -57,6 +59,17 @@ abstract class BasePalette extends BaseObject implements Persistent
      * @var        string
      */
     protected $description;
+
+    /**
+     * The value for the user_id field.
+     * @var        int
+     */
+    protected $user_id;
+
+    /**
+     * @var        User
+     */
+    protected $aUser;
 
     /**
      * @var        PropelObjectCollection|Color[] Collection to store aggregation of Color objects.
@@ -124,6 +137,17 @@ abstract class BasePalette extends BaseObject implements Persistent
     }
 
     /**
+     * Get the [user_id] column value.
+     *
+     * @return int
+     */
+    public function getUserId()
+    {
+
+        return $this->user_id;
+    }
+
+    /**
      * Set the value of [id] column.
      *
      * @param  int $v new value
@@ -187,6 +211,31 @@ abstract class BasePalette extends BaseObject implements Persistent
     } // setDescription()
 
     /**
+     * Set the value of [user_id] column.
+     *
+     * @param  int $v new value
+     * @return Palette The current object (for fluent API support)
+     */
+    public function setUserId($v)
+    {
+        if ($v !== null && is_numeric($v)) {
+            $v = (int) $v;
+        }
+
+        if ($this->user_id !== $v) {
+            $this->user_id = $v;
+            $this->modifiedColumns[] = PalettePeer::USER_ID;
+        }
+
+        if ($this->aUser !== null && $this->aUser->getId() !== $v) {
+            $this->aUser = null;
+        }
+
+
+        return $this;
+    } // setUserId()
+
+    /**
      * Indicates whether the columns in this object are only set to default values.
      *
      * This method can be used in conjunction with isModified() to indicate whether an object is both
@@ -221,6 +270,7 @@ abstract class BasePalette extends BaseObject implements Persistent
             $this->id = ($row[$startcol + 0] !== null) ? (int) $row[$startcol + 0] : null;
             $this->name = ($row[$startcol + 1] !== null) ? (string) $row[$startcol + 1] : null;
             $this->description = ($row[$startcol + 2] !== null) ? (string) $row[$startcol + 2] : null;
+            $this->user_id = ($row[$startcol + 3] !== null) ? (int) $row[$startcol + 3] : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -230,7 +280,7 @@ abstract class BasePalette extends BaseObject implements Persistent
             }
             $this->postHydrate($row, $startcol, $rehydrate);
 
-            return $startcol + 3; // 3 = PalettePeer::NUM_HYDRATE_COLUMNS.
+            return $startcol + 4; // 4 = PalettePeer::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
             throw new PropelException("Error populating Palette object", $e);
@@ -253,6 +303,9 @@ abstract class BasePalette extends BaseObject implements Persistent
     public function ensureConsistency()
     {
 
+        if ($this->aUser !== null && $this->user_id !== $this->aUser->getId()) {
+            $this->aUser = null;
+        }
     } // ensureConsistency
 
     /**
@@ -292,6 +345,7 @@ abstract class BasePalette extends BaseObject implements Persistent
 
         if ($deep) {  // also de-associate any related objects?
 
+            $this->aUser = null;
             $this->collColors = null;
 
         } // if (deep)
@@ -407,6 +461,18 @@ abstract class BasePalette extends BaseObject implements Persistent
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
+            // We call the save method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aUser !== null) {
+                if ($this->aUser->isModified() || $this->aUser->isNew()) {
+                    $affectedRows += $this->aUser->save($con);
+                }
+                $this->setUser($this->aUser);
+            }
+
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -471,6 +537,9 @@ abstract class BasePalette extends BaseObject implements Persistent
         if ($this->isColumnModified(PalettePeer::DESCRIPTION)) {
             $modifiedColumns[':p' . $index++]  = '`description`';
         }
+        if ($this->isColumnModified(PalettePeer::USER_ID)) {
+            $modifiedColumns[':p' . $index++]  = '`user_id`';
+        }
 
         $sql = sprintf(
             'INSERT INTO `palette` (%s) VALUES (%s)',
@@ -490,6 +559,9 @@ abstract class BasePalette extends BaseObject implements Persistent
                         break;
                     case '`description`':
                         $stmt->bindValue($identifier, $this->description, PDO::PARAM_STR);
+                        break;
+                    case '`user_id`':
+                        $stmt->bindValue($identifier, $this->user_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -585,6 +657,18 @@ abstract class BasePalette extends BaseObject implements Persistent
             $failureMap = array();
 
 
+            // We call the validate method on the following object(s) if they
+            // were passed to this object by their corresponding set
+            // method.  This object relates to these object(s) by a
+            // foreign key reference.
+
+            if ($this->aUser !== null) {
+                if (!$this->aUser->validate($columns)) {
+                    $failureMap = array_merge($failureMap, $this->aUser->getValidationFailures());
+                }
+            }
+
+
             if (($retval = PalettePeer::doValidate($this, $columns)) !== true) {
                 $failureMap = array_merge($failureMap, $retval);
             }
@@ -642,6 +726,9 @@ abstract class BasePalette extends BaseObject implements Persistent
             case 2:
                 return $this->getDescription();
                 break;
+            case 3:
+                return $this->getUserId();
+                break;
             default:
                 return null;
                 break;
@@ -674,6 +761,7 @@ abstract class BasePalette extends BaseObject implements Persistent
             $keys[0] => $this->getId(),
             $keys[1] => $this->getName(),
             $keys[2] => $this->getDescription(),
+            $keys[3] => $this->getUserId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -681,6 +769,9 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         if ($includeForeignObjects) {
+            if (null !== $this->aUser) {
+                $result['User'] = $this->aUser->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
+            }
             if (null !== $this->collColors) {
                 $result['Colors'] = $this->collColors->toArray(null, true, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
@@ -727,6 +818,9 @@ abstract class BasePalette extends BaseObject implements Persistent
             case 2:
                 $this->setDescription($value);
                 break;
+            case 3:
+                $this->setUserId($value);
+                break;
         } // switch()
     }
 
@@ -754,6 +848,7 @@ abstract class BasePalette extends BaseObject implements Persistent
         if (array_key_exists($keys[0], $arr)) $this->setId($arr[$keys[0]]);
         if (array_key_exists($keys[1], $arr)) $this->setName($arr[$keys[1]]);
         if (array_key_exists($keys[2], $arr)) $this->setDescription($arr[$keys[2]]);
+        if (array_key_exists($keys[3], $arr)) $this->setUserId($arr[$keys[3]]);
     }
 
     /**
@@ -768,6 +863,7 @@ abstract class BasePalette extends BaseObject implements Persistent
         if ($this->isColumnModified(PalettePeer::ID)) $criteria->add(PalettePeer::ID, $this->id);
         if ($this->isColumnModified(PalettePeer::NAME)) $criteria->add(PalettePeer::NAME, $this->name);
         if ($this->isColumnModified(PalettePeer::DESCRIPTION)) $criteria->add(PalettePeer::DESCRIPTION, $this->description);
+        if ($this->isColumnModified(PalettePeer::USER_ID)) $criteria->add(PalettePeer::USER_ID, $this->user_id);
 
         return $criteria;
     }
@@ -833,6 +929,7 @@ abstract class BasePalette extends BaseObject implements Persistent
     {
         $copyObj->setName($this->getName());
         $copyObj->setDescription($this->getDescription());
+        $copyObj->setUserId($this->getUserId());
 
         if ($deepCopy && !$this->startCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -895,6 +992,58 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         return self::$peer;
+    }
+
+    /**
+     * Declares an association between this object and a User object.
+     *
+     * @param                  User $v
+     * @return Palette The current object (for fluent API support)
+     * @throws PropelException
+     */
+    public function setUser(User $v = null)
+    {
+        if ($v === null) {
+            $this->setUserId(NULL);
+        } else {
+            $this->setUserId($v->getId());
+        }
+
+        $this->aUser = $v;
+
+        // Add binding for other direction of this n:n relationship.
+        // If this object has already been added to the User object, it will not be re-added.
+        if ($v !== null) {
+            $v->addPalette($this);
+        }
+
+
+        return $this;
+    }
+
+
+    /**
+     * Get the associated User object
+     *
+     * @param PropelPDO $con Optional Connection object.
+     * @param $doQuery Executes a query to get the object if required
+     * @return User The associated User object.
+     * @throws PropelException
+     */
+    public function getUser(PropelPDO $con = null, $doQuery = true)
+    {
+        if ($this->aUser === null && ($this->user_id !== null) && $doQuery) {
+            $this->aUser = UserQuery::create()->findPk($this->user_id, $con);
+            /* The following can be used additionally to
+                guarantee the related object contains a reference
+                to this object.  This level of coupling may, however, be
+                undesirable since it could result in an only partially populated collection
+                in the referenced object.
+                $this->aUser->addPalettes($this);
+             */
+        }
+
+        return $this->aUser;
     }
 
 
@@ -1146,6 +1295,7 @@ abstract class BasePalette extends BaseObject implements Persistent
         $this->id = null;
         $this->name = null;
         $this->description = null;
+        $this->user_id = null;
         $this->alreadyInSave = false;
         $this->alreadyInValidation = false;
         $this->alreadyInClearAllReferencesDeep = false;
@@ -1173,6 +1323,9 @@ abstract class BasePalette extends BaseObject implements Persistent
                     $o->clearAllReferences($deep);
                 }
             }
+            if ($this->aUser instanceof Persistent) {
+              $this->aUser->clearAllReferences($deep);
+            }
 
             $this->alreadyInClearAllReferencesDeep = false;
         } // if ($deep)
@@ -1181,6 +1334,7 @@ abstract class BasePalette extends BaseObject implements Persistent
             $this->collColors->clearIterator();
         }
         $this->collColors = null;
+        $this->aUser = null;
     }
 
     /**

@@ -8,7 +8,7 @@
         <h1>{{ palette.name }}</h1>
         {{ colorbar(palette.colors) }}
         
-        {% if is_granted('ROLE_USER') %}
+        {% if is_granted('ROLE_USER') and palette.isOwner(app.user) %}
         <div class="btn-inline-toolbar pull-right">
         {{ form_start(delete_form) }}
             <div class="btn-group">

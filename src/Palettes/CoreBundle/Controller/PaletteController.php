@@ -4,6 +4,7 @@ namespace Palettes\CoreBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
@@ -104,6 +105,10 @@ class PaletteController extends Controller {
      * @Template()
      */
     public function editAction(Palette $palette) {
+        if(!$palette->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createEditForm($palette);
         
         return [
@@ -120,6 +125,10 @@ class PaletteController extends Controller {
      * @Template("PalettesCoreBundle:Palette:edit.html.twig")
      */
     public function updateAction(Request $request, Palette $palette) {
+        if(!$palette->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createEditForm($palette);
         $form->handleRequest($request);
         
@@ -144,6 +153,10 @@ class PaletteController extends Controller {
      * @Security("is_granted('ROLE_USER')")
      */
     public function deleteAction(Request $request, Palette $palette) {
+        if(!$palette->isOwner($this->getUser())) {
+            throw new AccessDeniedException();
+        }
+        
         $form = $this->createDeleteForm($palette);
         $form->handleRequest($request);
         

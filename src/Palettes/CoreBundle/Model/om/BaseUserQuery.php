@@ -5,11 +5,14 @@ namespace Palettes\CoreBundle\Model\om;
 use \Criteria;
 use \Exception;
 use \ModelCriteria;
+use \ModelJoin;
 use \PDO;
 use \Propel;
+use \PropelCollection;
 use \PropelException;
 use \PropelObjectCollection;
 use \PropelPDO;
+use Palettes\CoreBundle\Model\Palette;
 use Palettes\CoreBundle\Model\User;
 use Palettes\CoreBundle\Model\UserPeer;
 use Palettes\CoreBundle\Model\UserQuery;
@@ -32,6 +35,10 @@ use Palettes\CoreBundle\Model\UserQuery;
  * @method UserQuery leftJoin($relation) Adds a LEFT JOIN clause to the query
  * @method UserQuery rightJoin($relation) Adds a RIGHT JOIN clause to the query
  * @method UserQuery innerJoin($relation) Adds a INNER JOIN clause to the query
+ *
+ * @method UserQuery leftJoinPalette($relationAlias = null) Adds a LEFT JOIN clause to the query using the Palette relation
+ * @method UserQuery rightJoinPalette($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Palette relation
+ * @method UserQuery innerJoinPalette($relationAlias = null) Adds a INNER JOIN clause to the query using the Palette relation
  *
  * @method User findOne(PropelPDO $con = null) Return the first User matching the query
  * @method User findOneOrCreate(PropelPDO $con = null) Return the first User matching the query, or a new User object populated from the query conditions when no match is found
@@ -427,6 +434,80 @@ abstract class BaseUserQuery extends ModelCriteria
         }
 
         return $this->addUsingAlias(UserPeer::ROLE, $role, $comparison);
+    }
+
+    /**
+     * Filter the query by a related Palette object
+     *
+     * @param   Palette|PropelObjectCollection $palette  the related object to use as filter
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return                 UserQuery The current query, for fluid interface
+     * @throws PropelException - if the provided filter is invalid.
+     */
+    public function filterByPalette($palette, $comparison = null)
+    {
+        if ($palette instanceof Palette) {
+            return $this
+                ->addUsingAlias(UserPeer::ID, $palette->getUserId(), $comparison);
+        } elseif ($palette instanceof PropelObjectCollection) {
+            return $this
+                ->usePaletteQuery()
+                ->filterByPrimaryKeys($palette->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByPalette() only accepts arguments of type Palette or PropelCollection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the Palette relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return UserQuery The current query, for fluid interface
+     */
+    public function joinPalette($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('Palette');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'Palette');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the Palette relation Palette object
+     *
+     * @see       useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return   \Palettes\CoreBundle\Model\PaletteQuery A secondary query class using the current class as primary query
+     */
+    public function usePaletteQuery($relationAlias = null, $joinType = Criteria::LEFT_JOIN)
+    {
+        return $this
+            ->joinPalette($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'Palette', '\Palettes\CoreBundle\Model\PaletteQuery');
     }
 
     /**
