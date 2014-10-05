@@ -38,7 +38,6 @@ class CreateUserCommand extends ContainerAwareCommand {
         $user = new User();
         $user->setUsername($username);
         $user->setEmail($email);
-        $user->setSalt($this->generateSalt());
         $user->setPlainPassword($password); 
         $user->setRole("ROLE_$role");
 
@@ -48,10 +47,6 @@ class CreateUserCommand extends ContainerAwareCommand {
             
             $output->writeln("Utworzono użytkownika $username");
         }
-    }
-    
-    private function generateSalt() {
-        return md5(uniqid(null, true));
     }
     
     private function encodePassword(User $user) {
