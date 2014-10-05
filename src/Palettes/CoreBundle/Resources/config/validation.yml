@@ -26,3 +26,24 @@ Palettes\CoreBundle\Model\Color:
                 htmlPattern: '^[0-9ABCDEF]{6}$'
         palette_id:
             - NotBlank: ~
+            
+Palettes\CoreBundle\Model\User:
+        constraints:
+            - Propel\PropelBundle\Validator\Constraints\UniqueObject:
+                fields:
+                    username
+        properties:
+            username: 
+                - NotBlank: ~
+                - Length:
+                    min: 3
+                    max: 128
+            email:
+                - NotBlank: ~
+                - Email: ~
+            plainPassword:
+                - NotBlank: ~
+                - Length:
+                    min: 3
+                    max: 128
+                
