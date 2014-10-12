@@ -45,8 +45,8 @@ class TagsListTransformer implements DataTransformerInterface {
             return '';
         }
         
-        return implode($this->delimiter, array_map(function($tag) {
-            return $tag->name;
+        return implode($this->delimiter.' ', array_map(function($tag) {
+            return $tag['Name'];
         }, $tags->toArray()));
     }
 }

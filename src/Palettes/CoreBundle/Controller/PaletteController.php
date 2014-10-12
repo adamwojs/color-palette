@@ -11,7 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Palettes\CoreBundle\Form\Type\PaletteType;
-use Palettes\CoreBundle\Model\PaletteTag;
+use Palettes\CoreBundle\Model\TagQuery;
 use Palettes\CoreBundle\Model\Palette;
 use Palettes\CoreBundle\Model\PaletteQuery;
 
@@ -192,6 +192,13 @@ class PaletteController extends Controller {
             ]),
             'method' => 'PUT'
         ]);
+
+        $tags = TagQuery::create()
+            ->joinPaletteTag()
+            ->leftJoin('PaletteTag.Palette')
+            ->where('palette.id ='.$palette->getId())
+            ->find();
+        $form->get('tags')->setData($tags);
         
         $form->add('submit', 'submit', [
             'label' => 'Zapisz zmiany'
