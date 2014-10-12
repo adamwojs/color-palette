@@ -28,6 +28,24 @@
         </foreign-key>
     </table>
         
+    <table name="tag">
+        <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
+        <column name="name" type="varchar" size="48" />
+    </table>
+
+    <table name="palette_tag">
+        <column name="palette_id" type="integer" primaryKey="true" />
+        <column name="tag_id" type="integer" primaryKey="true" />
+        
+        <foreign-key foreignTable="palette">
+            <reference local="palette_id" foreign="id" />
+        </foreign-key>
+        
+        <foreign-key foreignTable="tag">
+            <reference local="tag_id" foreign="id" />
+        </foreign-key>
+    </table>
+                        
     <table name="user">
         <column name="id" type="integer" required="true" primaryKey="true" autoIncrement="true" />
         <column name="username" type="varchar" size="128" />

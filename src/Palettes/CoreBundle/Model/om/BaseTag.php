@@ -13,28 +13,24 @@ use \PropelCollection;
 use \PropelException;
 use \PropelObjectCollection;
 use \PropelPDO;
-use Palettes\CoreBundle\Model\Color;
-use Palettes\CoreBundle\Model\ColorQuery;
-use Palettes\CoreBundle\Model\Palette;
-use Palettes\CoreBundle\Model\PalettePeer;
-use Palettes\CoreBundle\Model\PaletteQuery;
 use Palettes\CoreBundle\Model\PaletteTag;
 use Palettes\CoreBundle\Model\PaletteTagQuery;
-use Palettes\CoreBundle\Model\User;
-use Palettes\CoreBundle\Model\UserQuery;
+use Palettes\CoreBundle\Model\Tag;
+use Palettes\CoreBundle\Model\TagPeer;
+use Palettes\CoreBundle\Model\TagQuery;
 
-abstract class BasePalette extends BaseObject implements Persistent
+abstract class BaseTag extends BaseObject implements Persistent
 {
     /**
      * Peer class name
      */
-    const PEER = 'Palettes\\CoreBundle\\Model\\PalettePeer';
+    const PEER = 'Palettes\\CoreBundle\\Model\\TagPeer';
 
     /**
      * The Peer class.
      * Instance provides a convenient way of calling static methods on a class
      * that calling code may not be able to identify.
-     * @var        PalettePeer
+     * @var        TagPeer
      */
     protected static $peer;
 
@@ -55,29 +51,6 @@ abstract class BasePalette extends BaseObject implements Persistent
      * @var        string
      */
     protected $name;
-
-    /**
-     * The value for the description field.
-     * @var        string
-     */
-    protected $description;
-
-    /**
-     * The value for the user_id field.
-     * @var        int
-     */
-    protected $user_id;
-
-    /**
-     * @var        User
-     */
-    protected $aUser;
-
-    /**
-     * @var        PropelObjectCollection|Color[] Collection to store aggregation of Color objects.
-     */
-    protected $collColors;
-    protected $collColorsPartial;
 
     /**
      * @var        PropelObjectCollection|PaletteTag[] Collection to store aggregation of PaletteTag objects.
@@ -109,12 +82,6 @@ abstract class BasePalette extends BaseObject implements Persistent
      * An array of objects scheduled for deletion.
      * @var		PropelObjectCollection
      */
-    protected $colorsScheduledForDeletion = null;
-
-    /**
-     * An array of objects scheduled for deletion.
-     * @var		PropelObjectCollection
-     */
     protected $paletteTagsScheduledForDeletion = null;
 
     /**
@@ -140,32 +107,10 @@ abstract class BasePalette extends BaseObject implements Persistent
     }
 
     /**
-     * Get the [description] column value.
-     *
-     * @return string
-     */
-    public function getDescription()
-    {
-
-        return $this->description;
-    }
-
-    /**
-     * Get the [user_id] column value.
-     *
-     * @return int
-     */
-    public function getUserId()
-    {
-
-        return $this->user_id;
-    }
-
-    /**
      * Set the value of [id] column.
      *
      * @param  int $v new value
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      */
     public function setId($v)
     {
@@ -175,7 +120,7 @@ abstract class BasePalette extends BaseObject implements Persistent
 
         if ($this->id !== $v) {
             $this->id = $v;
-            $this->modifiedColumns[] = PalettePeer::ID;
+            $this->modifiedColumns[] = TagPeer::ID;
         }
 
 
@@ -186,7 +131,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * Set the value of [name] column.
      *
      * @param  string $v new value
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      */
     public function setName($v)
     {
@@ -196,58 +141,12 @@ abstract class BasePalette extends BaseObject implements Persistent
 
         if ($this->name !== $v) {
             $this->name = $v;
-            $this->modifiedColumns[] = PalettePeer::NAME;
+            $this->modifiedColumns[] = TagPeer::NAME;
         }
 
 
         return $this;
     } // setName()
-
-    /**
-     * Set the value of [description] column.
-     *
-     * @param  string $v new value
-     * @return Palette The current object (for fluent API support)
-     */
-    public function setDescription($v)
-    {
-        if ($v !== null) {
-            $v = (string) $v;
-        }
-
-        if ($this->description !== $v) {
-            $this->description = $v;
-            $this->modifiedColumns[] = PalettePeer::DESCRIPTION;
-        }
-
-
-        return $this;
-    } // setDescription()
-
-    /**
-     * Set the value of [user_id] column.
-     *
-     * @param  int $v new value
-     * @return Palette The current object (for fluent API support)
-     */
-    public function setUserId($v)
-    {
-        if ($v !== null && is_numeric($v)) {
-            $v = (int) $v;
-        }
-
-        if ($this->user_id !== $v) {
-            $this->user_id = $v;
-            $this->modifiedColumns[] = PalettePeer::USER_ID;
-        }
-
-        if ($this->aUser !== null && $this->aUser->getId() !== $v) {
-            $this->aUser = null;
-        }
-
-
-        return $this;
-    } // setUserId()
 
     /**
      * Indicates whether the columns in this object are only set to default values.
@@ -283,8 +182,6 @@ abstract class BasePalette extends BaseObject implements Persistent
 
             $this->id = ($row[$startcol + 0] !== null) ? (int) $row[$startcol + 0] : null;
             $this->name = ($row[$startcol + 1] !== null) ? (string) $row[$startcol + 1] : null;
-            $this->description = ($row[$startcol + 2] !== null) ? (string) $row[$startcol + 2] : null;
-            $this->user_id = ($row[$startcol + 3] !== null) ? (int) $row[$startcol + 3] : null;
             $this->resetModified();
 
             $this->setNew(false);
@@ -294,10 +191,10 @@ abstract class BasePalette extends BaseObject implements Persistent
             }
             $this->postHydrate($row, $startcol, $rehydrate);
 
-            return $startcol + 4; // 4 = PalettePeer::NUM_HYDRATE_COLUMNS.
+            return $startcol + 2; // 2 = TagPeer::NUM_HYDRATE_COLUMNS.
 
         } catch (Exception $e) {
-            throw new PropelException("Error populating Palette object", $e);
+            throw new PropelException("Error populating Tag object", $e);
         }
     }
 
@@ -317,9 +214,6 @@ abstract class BasePalette extends BaseObject implements Persistent
     public function ensureConsistency()
     {
 
-        if ($this->aUser !== null && $this->user_id !== $this->aUser->getId()) {
-            $this->aUser = null;
-        }
     } // ensureConsistency
 
     /**
@@ -343,13 +237,13 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         if ($con === null) {
-            $con = Propel::getConnection(PalettePeer::DATABASE_NAME, Propel::CONNECTION_READ);
+            $con = Propel::getConnection(TagPeer::DATABASE_NAME, Propel::CONNECTION_READ);
         }
 
         // We don't need to alter the object instance pool; we're just modifying this instance
         // already in the pool.
 
-        $stmt = PalettePeer::doSelectStmt($this->buildPkeyCriteria(), $con);
+        $stmt = TagPeer::doSelectStmt($this->buildPkeyCriteria(), $con);
         $row = $stmt->fetch(PDO::FETCH_NUM);
         $stmt->closeCursor();
         if (!$row) {
@@ -358,9 +252,6 @@ abstract class BasePalette extends BaseObject implements Persistent
         $this->hydrate($row, 0, true); // rehydrate
 
         if ($deep) {  // also de-associate any related objects?
-
-            $this->aUser = null;
-            $this->collColors = null;
 
             $this->collPaletteTags = null;
 
@@ -384,12 +275,12 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         if ($con === null) {
-            $con = Propel::getConnection(PalettePeer::DATABASE_NAME, Propel::CONNECTION_WRITE);
+            $con = Propel::getConnection(TagPeer::DATABASE_NAME, Propel::CONNECTION_WRITE);
         }
 
         $con->beginTransaction();
         try {
-            $deleteQuery = PaletteQuery::create()
+            $deleteQuery = TagQuery::create()
                 ->filterByPrimaryKey($this->getPrimaryKey());
             $ret = $this->preDelete($con);
             if ($ret) {
@@ -427,7 +318,7 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         if ($con === null) {
-            $con = Propel::getConnection(PalettePeer::DATABASE_NAME, Propel::CONNECTION_WRITE);
+            $con = Propel::getConnection(TagPeer::DATABASE_NAME, Propel::CONNECTION_WRITE);
         }
 
         $con->beginTransaction();
@@ -447,7 +338,7 @@ abstract class BasePalette extends BaseObject implements Persistent
                     $this->postUpdate($con);
                 }
                 $this->postSave($con);
-                PalettePeer::addInstanceToPool($this);
+                TagPeer::addInstanceToPool($this);
             } else {
                 $affectedRows = 0;
             }
@@ -477,18 +368,6 @@ abstract class BasePalette extends BaseObject implements Persistent
         if (!$this->alreadyInSave) {
             $this->alreadyInSave = true;
 
-            // We call the save method on the following object(s) if they
-            // were passed to this object by their corresponding set
-            // method.  This object relates to these object(s) by a
-            // foreign key reference.
-
-            if ($this->aUser !== null) {
-                if ($this->aUser->isModified() || $this->aUser->isNew()) {
-                    $affectedRows += $this->aUser->save($con);
-                }
-                $this->setUser($this->aUser);
-            }
-
             if ($this->isNew() || $this->isModified()) {
                 // persist changes
                 if ($this->isNew()) {
@@ -498,24 +377,6 @@ abstract class BasePalette extends BaseObject implements Persistent
                 }
                 $affectedRows += 1;
                 $this->resetModified();
-            }
-
-            if ($this->colorsScheduledForDeletion !== null) {
-                if (!$this->colorsScheduledForDeletion->isEmpty()) {
-                    foreach ($this->colorsScheduledForDeletion as $color) {
-                        // need to save related object because we set the relation to null
-                        $color->save($con);
-                    }
-                    $this->colorsScheduledForDeletion = null;
-                }
-            }
-
-            if ($this->collColors !== null) {
-                foreach ($this->collColors as $referrerFK) {
-                    if (!$referrerFK->isDeleted() && ($referrerFK->isNew() || $referrerFK->isModified())) {
-                        $affectedRows += $referrerFK->save($con);
-                    }
-                }
             }
 
             if ($this->paletteTagsScheduledForDeletion !== null) {
@@ -555,27 +416,21 @@ abstract class BasePalette extends BaseObject implements Persistent
         $modifiedColumns = array();
         $index = 0;
 
-        $this->modifiedColumns[] = PalettePeer::ID;
+        $this->modifiedColumns[] = TagPeer::ID;
         if (null !== $this->id) {
-            throw new PropelException('Cannot insert a value for auto-increment primary key (' . PalettePeer::ID . ')');
+            throw new PropelException('Cannot insert a value for auto-increment primary key (' . TagPeer::ID . ')');
         }
 
          // check the columns in natural order for more readable SQL queries
-        if ($this->isColumnModified(PalettePeer::ID)) {
+        if ($this->isColumnModified(TagPeer::ID)) {
             $modifiedColumns[':p' . $index++]  = '`id`';
         }
-        if ($this->isColumnModified(PalettePeer::NAME)) {
+        if ($this->isColumnModified(TagPeer::NAME)) {
             $modifiedColumns[':p' . $index++]  = '`name`';
-        }
-        if ($this->isColumnModified(PalettePeer::DESCRIPTION)) {
-            $modifiedColumns[':p' . $index++]  = '`description`';
-        }
-        if ($this->isColumnModified(PalettePeer::USER_ID)) {
-            $modifiedColumns[':p' . $index++]  = '`user_id`';
         }
 
         $sql = sprintf(
-            'INSERT INTO `palette` (%s) VALUES (%s)',
+            'INSERT INTO `tag` (%s) VALUES (%s)',
             implode(', ', $modifiedColumns),
             implode(', ', array_keys($modifiedColumns))
         );
@@ -589,12 +444,6 @@ abstract class BasePalette extends BaseObject implements Persistent
                         break;
                     case '`name`':
                         $stmt->bindValue($identifier, $this->name, PDO::PARAM_STR);
-                        break;
-                    case '`description`':
-                        $stmt->bindValue($identifier, $this->description, PDO::PARAM_STR);
-                        break;
-                    case '`user_id`':
-                        $stmt->bindValue($identifier, $this->user_id, PDO::PARAM_INT);
                         break;
                 }
             }
@@ -690,30 +539,10 @@ abstract class BasePalette extends BaseObject implements Persistent
             $failureMap = array();
 
 
-            // We call the validate method on the following object(s) if they
-            // were passed to this object by their corresponding set
-            // method.  This object relates to these object(s) by a
-            // foreign key reference.
-
-            if ($this->aUser !== null) {
-                if (!$this->aUser->validate($columns)) {
-                    $failureMap = array_merge($failureMap, $this->aUser->getValidationFailures());
-                }
-            }
-
-
-            if (($retval = PalettePeer::doValidate($this, $columns)) !== true) {
+            if (($retval = TagPeer::doValidate($this, $columns)) !== true) {
                 $failureMap = array_merge($failureMap, $retval);
             }
 
-
-                if ($this->collColors !== null) {
-                    foreach ($this->collColors as $referrerFK) {
-                        if (!$referrerFK->validate($columns)) {
-                            $failureMap = array_merge($failureMap, $referrerFK->getValidationFailures());
-                        }
-                    }
-                }
 
                 if ($this->collPaletteTags !== null) {
                     foreach ($this->collPaletteTags as $referrerFK) {
@@ -742,7 +571,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function getByName($name, $type = BasePeer::TYPE_PHPNAME)
     {
-        $pos = PalettePeer::translateFieldName($name, $type, BasePeer::TYPE_NUM);
+        $pos = TagPeer::translateFieldName($name, $type, BasePeer::TYPE_NUM);
         $field = $this->getByPosition($pos);
 
         return $field;
@@ -763,12 +592,6 @@ abstract class BasePalette extends BaseObject implements Persistent
                 break;
             case 1:
                 return $this->getName();
-                break;
-            case 2:
-                return $this->getDescription();
-                break;
-            case 3:
-                return $this->getUserId();
                 break;
             default:
                 return null;
@@ -793,16 +616,14 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function toArray($keyType = BasePeer::TYPE_PHPNAME, $includeLazyLoadColumns = true, $alreadyDumpedObjects = array(), $includeForeignObjects = false)
     {
-        if (isset($alreadyDumpedObjects['Palette'][$this->getPrimaryKey()])) {
+        if (isset($alreadyDumpedObjects['Tag'][$this->getPrimaryKey()])) {
             return '*RECURSION*';
         }
-        $alreadyDumpedObjects['Palette'][$this->getPrimaryKey()] = true;
-        $keys = PalettePeer::getFieldNames($keyType);
+        $alreadyDumpedObjects['Tag'][$this->getPrimaryKey()] = true;
+        $keys = TagPeer::getFieldNames($keyType);
         $result = array(
             $keys[0] => $this->getId(),
             $keys[1] => $this->getName(),
-            $keys[2] => $this->getDescription(),
-            $keys[3] => $this->getUserId(),
         );
         $virtualColumns = $this->virtualColumns;
         foreach ($virtualColumns as $key => $virtualColumn) {
@@ -810,12 +631,6 @@ abstract class BasePalette extends BaseObject implements Persistent
         }
 
         if ($includeForeignObjects) {
-            if (null !== $this->aUser) {
-                $result['User'] = $this->aUser->toArray($keyType, $includeLazyLoadColumns,  $alreadyDumpedObjects, true);
-            }
-            if (null !== $this->collColors) {
-                $result['Colors'] = $this->collColors->toArray(null, true, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
-            }
             if (null !== $this->collPaletteTags) {
                 $result['PaletteTags'] = $this->collPaletteTags->toArray(null, true, $keyType, $includeLazyLoadColumns, $alreadyDumpedObjects);
             }
@@ -837,7 +652,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function setByName($name, $value, $type = BasePeer::TYPE_PHPNAME)
     {
-        $pos = PalettePeer::translateFieldName($name, $type, BasePeer::TYPE_NUM);
+        $pos = TagPeer::translateFieldName($name, $type, BasePeer::TYPE_NUM);
 
         $this->setByPosition($pos, $value);
     }
@@ -858,12 +673,6 @@ abstract class BasePalette extends BaseObject implements Persistent
                 break;
             case 1:
                 $this->setName($value);
-                break;
-            case 2:
-                $this->setDescription($value);
-                break;
-            case 3:
-                $this->setUserId($value);
                 break;
         } // switch()
     }
@@ -887,12 +696,10 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function fromArray($arr, $keyType = BasePeer::TYPE_PHPNAME)
     {
-        $keys = PalettePeer::getFieldNames($keyType);
+        $keys = TagPeer::getFieldNames($keyType);
 
         if (array_key_exists($keys[0], $arr)) $this->setId($arr[$keys[0]]);
         if (array_key_exists($keys[1], $arr)) $this->setName($arr[$keys[1]]);
-        if (array_key_exists($keys[2], $arr)) $this->setDescription($arr[$keys[2]]);
-        if (array_key_exists($keys[3], $arr)) $this->setUserId($arr[$keys[3]]);
     }
 
     /**
@@ -902,12 +709,10 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function buildCriteria()
     {
-        $criteria = new Criteria(PalettePeer::DATABASE_NAME);
+        $criteria = new Criteria(TagPeer::DATABASE_NAME);
 
-        if ($this->isColumnModified(PalettePeer::ID)) $criteria->add(PalettePeer::ID, $this->id);
-        if ($this->isColumnModified(PalettePeer::NAME)) $criteria->add(PalettePeer::NAME, $this->name);
-        if ($this->isColumnModified(PalettePeer::DESCRIPTION)) $criteria->add(PalettePeer::DESCRIPTION, $this->description);
-        if ($this->isColumnModified(PalettePeer::USER_ID)) $criteria->add(PalettePeer::USER_ID, $this->user_id);
+        if ($this->isColumnModified(TagPeer::ID)) $criteria->add(TagPeer::ID, $this->id);
+        if ($this->isColumnModified(TagPeer::NAME)) $criteria->add(TagPeer::NAME, $this->name);
 
         return $criteria;
     }
@@ -922,8 +727,8 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function buildPkeyCriteria()
     {
-        $criteria = new Criteria(PalettePeer::DATABASE_NAME);
-        $criteria->add(PalettePeer::ID, $this->id);
+        $criteria = new Criteria(TagPeer::DATABASE_NAME);
+        $criteria->add(TagPeer::ID, $this->id);
 
         return $criteria;
     }
@@ -964,7 +769,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * If desired, this method can also make copies of all associated (fkey referrers)
      * objects.
      *
-     * @param object $copyObj An object of Palette (or compatible) type.
+     * @param object $copyObj An object of Tag (or compatible) type.
      * @param boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
      * @param boolean $makeNew Whether to reset autoincrement PKs and make the object new.
      * @throws PropelException
@@ -972,8 +777,6 @@ abstract class BasePalette extends BaseObject implements Persistent
     public function copyInto($copyObj, $deepCopy = false, $makeNew = true)
     {
         $copyObj->setName($this->getName());
-        $copyObj->setDescription($this->getDescription());
-        $copyObj->setUserId($this->getUserId());
 
         if ($deepCopy && !$this->startCopy) {
             // important: temporarily setNew(false) because this affects the behavior of
@@ -981,12 +784,6 @@ abstract class BasePalette extends BaseObject implements Persistent
             $copyObj->setNew(false);
             // store object hash to prevent cycle
             $this->startCopy = true;
-
-            foreach ($this->getColors() as $relObj) {
-                if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
-                    $copyObj->addColor($relObj->copy($deepCopy));
-                }
-            }
 
             foreach ($this->getPaletteTags() as $relObj) {
                 if ($relObj !== $this) {  // ensure that we don't try to copy a reference to ourselves
@@ -1013,7 +810,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * objects.
      *
      * @param boolean $deepCopy Whether to also copy all rows that refer (by fkey) to the current row.
-     * @return Palette Clone of current object.
+     * @return Tag Clone of current object.
      * @throws PropelException
      */
     public function copy($deepCopy = false)
@@ -1033,67 +830,15 @@ abstract class BasePalette extends BaseObject implements Persistent
      * same instance for all member of this class. The method could therefore
      * be static, but this would prevent one from overriding the behavior.
      *
-     * @return PalettePeer
+     * @return TagPeer
      */
     public function getPeer()
     {
         if (self::$peer === null) {
-            self::$peer = new PalettePeer();
+            self::$peer = new TagPeer();
         }
 
         return self::$peer;
-    }
-
-    /**
-     * Declares an association between this object and a User object.
-     *
-     * @param                  User $v
-     * @return Palette The current object (for fluent API support)
-     * @throws PropelException
-     */
-    public function setUser(User $v = null)
-    {
-        if ($v === null) {
-            $this->setUserId(NULL);
-        } else {
-            $this->setUserId($v->getId());
-        }
-
-        $this->aUser = $v;
-
-        // Add binding for other direction of this n:n relationship.
-        // If this object has already been added to the User object, it will not be re-added.
-        if ($v !== null) {
-            $v->addPalette($this);
-        }
-
-
-        return $this;
-    }
-
-
-    /**
-     * Get the associated User object
-     *
-     * @param PropelPDO $con Optional Connection object.
-     * @param $doQuery Executes a query to get the object if required
-     * @return User The associated User object.
-     * @throws PropelException
-     */
-    public function getUser(PropelPDO $con = null, $doQuery = true)
-    {
-        if ($this->aUser === null && ($this->user_id !== null) && $doQuery) {
-            $this->aUser = UserQuery::create()->findPk($this->user_id, $con);
-            /* The following can be used additionally to
-                guarantee the related object contains a reference
-                to this object.  This level of coupling may, however, be
-                undesirable since it could result in an only partially populated collection
-                in the referenced object.
-                $this->aUser->addPalettes($this);
-             */
-        }
-
-        return $this->aUser;
     }
 
 
@@ -1107,237 +852,9 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function initRelation($relationName)
     {
-        if ('Color' == $relationName) {
-            $this->initColors();
-        }
         if ('PaletteTag' == $relationName) {
             $this->initPaletteTags();
         }
-    }
-
-    /**
-     * Clears out the collColors collection
-     *
-     * This does not modify the database; however, it will remove any associated objects, causing
-     * them to be refetched by subsequent calls to accessor method.
-     *
-     * @return Palette The current object (for fluent API support)
-     * @see        addColors()
-     */
-    public function clearColors()
-    {
-        $this->collColors = null; // important to set this to null since that means it is uninitialized
-        $this->collColorsPartial = null;
-
-        return $this;
-    }
-
-    /**
-     * reset is the collColors collection loaded partially
-     *
-     * @return void
-     */
-    public function resetPartialColors($v = true)
-    {
-        $this->collColorsPartial = $v;
-    }
-
-    /**
-     * Initializes the collColors collection.
-     *
-     * By default this just sets the collColors collection to an empty array (like clearcollColors());
-     * however, you may wish to override this method in your stub class to provide setting appropriate
-     * to your application -- for example, setting the initial array to the values stored in database.
-     *
-     * @param boolean $overrideExisting If set to true, the method call initializes
-     *                                        the collection even if it is not empty
-     *
-     * @return void
-     */
-    public function initColors($overrideExisting = true)
-    {
-        if (null !== $this->collColors && !$overrideExisting) {
-            return;
-        }
-        $this->collColors = new PropelObjectCollection();
-        $this->collColors->setModel('Color');
-    }
-
-    /**
-     * Gets an array of Color objects which contain a foreign key that references this object.
-     *
-     * If the $criteria is not null, it is used to always fetch the results from the database.
-     * Otherwise the results are fetched from the database the first time, then cached.
-     * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this Palette is new, it will return
-     * an empty collection or the current collection; the criteria is ignored on a new object.
-     *
-     * @param Criteria $criteria optional Criteria object to narrow the query
-     * @param PropelPDO $con optional connection object
-     * @return PropelObjectCollection|Color[] List of Color objects
-     * @throws PropelException
-     */
-    public function getColors($criteria = null, PropelPDO $con = null)
-    {
-        $partial = $this->collColorsPartial && !$this->isNew();
-        if (null === $this->collColors || null !== $criteria  || $partial) {
-            if ($this->isNew() && null === $this->collColors) {
-                // return empty collection
-                $this->initColors();
-            } else {
-                $collColors = ColorQuery::create(null, $criteria)
-                    ->filterByPalette($this)
-                    ->find($con);
-                if (null !== $criteria) {
-                    if (false !== $this->collColorsPartial && count($collColors)) {
-                      $this->initColors(false);
-
-                      foreach ($collColors as $obj) {
-                        if (false == $this->collColors->contains($obj)) {
-                          $this->collColors->append($obj);
-                        }
-                      }
-
-                      $this->collColorsPartial = true;
-                    }
-
-                    $collColors->getInternalIterator()->rewind();
-
-                    return $collColors;
-                }
-
-                if ($partial && $this->collColors) {
-                    foreach ($this->collColors as $obj) {
-                        if ($obj->isNew()) {
-                            $collColors[] = $obj;
-                        }
-                    }
-                }
-
-                $this->collColors = $collColors;
-                $this->collColorsPartial = false;
-            }
-        }
-
-        return $this->collColors;
-    }
-
-    /**
-     * Sets a collection of Color objects related by a one-to-many relationship
-     * to the current object.
-     * It will also schedule objects for deletion based on a diff between old objects (aka persisted)
-     * and new objects from the given Propel collection.
-     *
-     * @param PropelCollection $colors A Propel collection.
-     * @param PropelPDO $con Optional connection object
-     * @return Palette The current object (for fluent API support)
-     */
-    public function setColors(PropelCollection $colors, PropelPDO $con = null)
-    {
-        $colorsToDelete = $this->getColors(new Criteria(), $con)->diff($colors);
-
-
-        $this->colorsScheduledForDeletion = $colorsToDelete;
-
-        foreach ($colorsToDelete as $colorRemoved) {
-            $colorRemoved->setPalette(null);
-        }
-
-        $this->collColors = null;
-        foreach ($colors as $color) {
-            $this->addColor($color);
-        }
-
-        $this->collColors = $colors;
-        $this->collColorsPartial = false;
-
-        return $this;
-    }
-
-    /**
-     * Returns the number of related Color objects.
-     *
-     * @param Criteria $criteria
-     * @param boolean $distinct
-     * @param PropelPDO $con
-     * @return int             Count of related Color objects.
-     * @throws PropelException
-     */
-    public function countColors(Criteria $criteria = null, $distinct = false, PropelPDO $con = null)
-    {
-        $partial = $this->collColorsPartial && !$this->isNew();
-        if (null === $this->collColors || null !== $criteria || $partial) {
-            if ($this->isNew() && null === $this->collColors) {
-                return 0;
-            }
-
-            if ($partial && !$criteria) {
-                return count($this->getColors());
-            }
-            $query = ColorQuery::create(null, $criteria);
-            if ($distinct) {
-                $query->distinct();
-            }
-
-            return $query
-                ->filterByPalette($this)
-                ->count($con);
-        }
-
-        return count($this->collColors);
-    }
-
-    /**
-     * Method called to associate a Color object to this object
-     * through the Color foreign key attribute.
-     *
-     * @param    Color $l Color
-     * @return Palette The current object (for fluent API support)
-     */
-    public function addColor(Color $l)
-    {
-        if ($this->collColors === null) {
-            $this->initColors();
-            $this->collColorsPartial = true;
-        }
-
-        if (!in_array($l, $this->collColors->getArrayCopy(), true)) { // only add it if the **same** object is not already associated
-            $this->doAddColor($l);
-
-            if ($this->colorsScheduledForDeletion and $this->colorsScheduledForDeletion->contains($l)) {
-                $this->colorsScheduledForDeletion->remove($this->colorsScheduledForDeletion->search($l));
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * @param	Color $color The color object to add.
-     */
-    protected function doAddColor($color)
-    {
-        $this->collColors[]= $color;
-        $color->setPalette($this);
-    }
-
-    /**
-     * @param	Color $color The color object to remove.
-     * @return Palette The current object (for fluent API support)
-     */
-    public function removeColor($color)
-    {
-        if ($this->getColors()->contains($color)) {
-            $this->collColors->remove($this->collColors->search($color));
-            if (null === $this->colorsScheduledForDeletion) {
-                $this->colorsScheduledForDeletion = clone $this->collColors;
-                $this->colorsScheduledForDeletion->clear();
-            }
-            $this->colorsScheduledForDeletion[]= $color;
-            $color->setPalette(null);
-        }
-
-        return $this;
     }
 
     /**
@@ -1346,7 +863,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * This does not modify the database; however, it will remove any associated objects, causing
      * them to be refetched by subsequent calls to accessor method.
      *
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      * @see        addPaletteTags()
      */
     public function clearPaletteTags()
@@ -1394,7 +911,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * If the $criteria is not null, it is used to always fetch the results from the database.
      * Otherwise the results are fetched from the database the first time, then cached.
      * Next time the same method is called without $criteria, the cached collection is returned.
-     * If this Palette is new, it will return
+     * If this Tag is new, it will return
      * an empty collection or the current collection; the criteria is ignored on a new object.
      *
      * @param Criteria $criteria optional Criteria object to narrow the query
@@ -1411,7 +928,7 @@ abstract class BasePalette extends BaseObject implements Persistent
                 $this->initPaletteTags();
             } else {
                 $collPaletteTags = PaletteTagQuery::create(null, $criteria)
-                    ->filterByPalette($this)
+                    ->filterByTag($this)
                     ->find($con);
                 if (null !== $criteria) {
                     if (false !== $this->collPaletteTagsPartial && count($collPaletteTags)) {
@@ -1455,7 +972,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      *
      * @param PropelCollection $paletteTags A Propel collection.
      * @param PropelPDO $con Optional connection object
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      */
     public function setPaletteTags(PropelCollection $paletteTags, PropelPDO $con = null)
     {
@@ -1468,7 +985,7 @@ abstract class BasePalette extends BaseObject implements Persistent
         $this->paletteTagsScheduledForDeletion = clone $paletteTagsToDelete;
 
         foreach ($paletteTagsToDelete as $paletteTagRemoved) {
-            $paletteTagRemoved->setPalette(null);
+            $paletteTagRemoved->setTag(null);
         }
 
         $this->collPaletteTags = null;
@@ -1508,7 +1025,7 @@ abstract class BasePalette extends BaseObject implements Persistent
             }
 
             return $query
-                ->filterByPalette($this)
+                ->filterByTag($this)
                 ->count($con);
         }
 
@@ -1520,7 +1037,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      * through the PaletteTag foreign key attribute.
      *
      * @param    PaletteTag $l PaletteTag
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      */
     public function addPaletteTag(PaletteTag $l)
     {
@@ -1546,12 +1063,12 @@ abstract class BasePalette extends BaseObject implements Persistent
     protected function doAddPaletteTag($paletteTag)
     {
         $this->collPaletteTags[]= $paletteTag;
-        $paletteTag->setPalette($this);
+        $paletteTag->setTag($this);
     }
 
     /**
      * @param	PaletteTag $paletteTag The paletteTag object to remove.
-     * @return Palette The current object (for fluent API support)
+     * @return Tag The current object (for fluent API support)
      */
     public function removePaletteTag($paletteTag)
     {
@@ -1562,7 +1079,7 @@ abstract class BasePalette extends BaseObject implements Persistent
                 $this->paletteTagsScheduledForDeletion->clear();
             }
             $this->paletteTagsScheduledForDeletion[]= clone $paletteTag;
-            $paletteTag->setPalette(null);
+            $paletteTag->setTag(null);
         }
 
         return $this;
@@ -1572,23 +1089,23 @@ abstract class BasePalette extends BaseObject implements Persistent
     /**
      * If this collection has already been initialized with
      * an identical criteria, it returns the collection.
-     * Otherwise if this Palette is new, it will return
-     * an empty collection; or if this Palette has previously
+     * Otherwise if this Tag is new, it will return
+     * an empty collection; or if this Tag has previously
      * been saved, it will retrieve related PaletteTags from storage.
      *
      * This method is protected by default in order to keep the public
      * api reasonable.  You can provide public methods for those you
-     * actually need in Palette.
+     * actually need in Tag.
      *
      * @param Criteria $criteria optional Criteria object to narrow the query
      * @param PropelPDO $con optional connection object
      * @param string $join_behavior optional join type to use (defaults to Criteria::LEFT_JOIN)
      * @return PropelObjectCollection|PaletteTag[] List of PaletteTag objects
      */
-    public function getPaletteTagsJoinTag($criteria = null, $con = null, $join_behavior = Criteria::LEFT_JOIN)
+    public function getPaletteTagsJoinPalette($criteria = null, $con = null, $join_behavior = Criteria::LEFT_JOIN)
     {
         $query = PaletteTagQuery::create(null, $criteria);
-        $query->joinWith('Tag', $join_behavior);
+        $query->joinWith('Palette', $join_behavior);
 
         return $this->getPaletteTags($query, $con);
     }
@@ -1600,8 +1117,6 @@ abstract class BasePalette extends BaseObject implements Persistent
     {
         $this->id = null;
         $this->name = null;
-        $this->description = null;
-        $this->user_id = null;
         $this->alreadyInSave = false;
         $this->alreadyInValidation = false;
         $this->alreadyInClearAllReferencesDeep = false;
@@ -1624,32 +1139,19 @@ abstract class BasePalette extends BaseObject implements Persistent
     {
         if ($deep && !$this->alreadyInClearAllReferencesDeep) {
             $this->alreadyInClearAllReferencesDeep = true;
-            if ($this->collColors) {
-                foreach ($this->collColors as $o) {
-                    $o->clearAllReferences($deep);
-                }
-            }
             if ($this->collPaletteTags) {
                 foreach ($this->collPaletteTags as $o) {
                     $o->clearAllReferences($deep);
                 }
             }
-            if ($this->aUser instanceof Persistent) {
-              $this->aUser->clearAllReferences($deep);
-            }
 
             $this->alreadyInClearAllReferencesDeep = false;
         } // if ($deep)
 
-        if ($this->collColors instanceof PropelCollection) {
-            $this->collColors->clearIterator();
-        }
-        $this->collColors = null;
         if ($this->collPaletteTags instanceof PropelCollection) {
             $this->collPaletteTags->clearIterator();
         }
         $this->collPaletteTags = null;
-        $this->aUser = null;
     }
 
     /**
@@ -1659,7 +1161,7 @@ abstract class BasePalette extends BaseObject implements Persistent
      */
     public function __toString()
     {
-        return (string) $this->exportTo(PalettePeer::DEFAULT_STRING_FORMAT);
+        return (string) $this->exportTo(TagPeer::DEFAULT_STRING_FORMAT);
     }
 
     /**

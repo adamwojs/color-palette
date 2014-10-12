@@ -16,6 +16,7 @@ use Palettes\CoreBundle\Model\Color;
 use Palettes\CoreBundle\Model\Palette;
 use Palettes\CoreBundle\Model\PalettePeer;
 use Palettes\CoreBundle\Model\PaletteQuery;
+use Palettes\CoreBundle\Model\PaletteTag;
 use Palettes\CoreBundle\Model\User;
 
 /**
@@ -40,6 +41,10 @@ use Palettes\CoreBundle\Model\User;
  * @method PaletteQuery leftJoinColor($relationAlias = null) Adds a LEFT JOIN clause to the query using the Color relation
  * @method PaletteQuery rightJoinColor($relationAlias = null) Adds a RIGHT JOIN clause to the query using the Color relation
  * @method PaletteQuery innerJoinColor($relationAlias = null) Adds a INNER JOIN clause to the query using the Color relation
+ *
+ * @method PaletteQuery leftJoinPaletteTag($relationAlias = null) Adds a LEFT JOIN clause to the query using the PaletteTag relation
+ * @method PaletteQuery rightJoinPaletteTag($relationAlias = null) Adds a RIGHT JOIN clause to the query using the PaletteTag relation
+ * @method PaletteQuery innerJoinPaletteTag($relationAlias = null) Adds a INNER JOIN clause to the query using the PaletteTag relation
  *
  * @method Palette findOne(PropelPDO $con = null) Return the first Palette matching the query
  * @method Palette findOneOrCreate(PropelPDO $con = null) Return the first Palette matching the query, or a new Palette object populated from the query conditions when no match is found
@@ -538,6 +543,80 @@ abstract class BasePaletteQuery extends ModelCriteria
         return $this
             ->joinColor($relationAlias, $joinType)
             ->useQuery($relationAlias ? $relationAlias : 'Color', '\Palettes\CoreBundle\Model\ColorQuery');
+    }
+
+    /**
+     * Filter the query by a related PaletteTag object
+     *
+     * @param   PaletteTag|PropelObjectCollection $paletteTag  the related object to use as filter
+     * @param     string $comparison Operator to use for the column comparison, defaults to Criteria::EQUAL
+     *
+     * @return                 PaletteQuery The current query, for fluid interface
+     * @throws PropelException - if the provided filter is invalid.
+     */
+    public function filterByPaletteTag($paletteTag, $comparison = null)
+    {
+        if ($paletteTag instanceof PaletteTag) {
+            return $this
+                ->addUsingAlias(PalettePeer::ID, $paletteTag->getPaletteId(), $comparison);
+        } elseif ($paletteTag instanceof PropelObjectCollection) {
+            return $this
+                ->usePaletteTagQuery()
+                ->filterByPrimaryKeys($paletteTag->getPrimaryKeys())
+                ->endUse();
+        } else {
+            throw new PropelException('filterByPaletteTag() only accepts arguments of type PaletteTag or PropelCollection');
+        }
+    }
+
+    /**
+     * Adds a JOIN clause to the query using the PaletteTag relation
+     *
+     * @param     string $relationAlias optional alias for the relation
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return PaletteQuery The current query, for fluid interface
+     */
+    public function joinPaletteTag($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        $tableMap = $this->getTableMap();
+        $relationMap = $tableMap->getRelation('PaletteTag');
+
+        // create a ModelJoin object for this join
+        $join = new ModelJoin();
+        $join->setJoinType($joinType);
+        $join->setRelationMap($relationMap, $this->useAliasInSQL ? $this->getModelAlias() : null, $relationAlias);
+        if ($previousJoin = $this->getPreviousJoin()) {
+            $join->setPreviousJoin($previousJoin);
+        }
+
+        // add the ModelJoin to the current object
+        if ($relationAlias) {
+            $this->addAlias($relationAlias, $relationMap->getRightTable()->getName());
+            $this->addJoinObject($join, $relationAlias);
+        } else {
+            $this->addJoinObject($join, 'PaletteTag');
+        }
+
+        return $this;
+    }
+
+    /**
+     * Use the PaletteTag relation PaletteTag object
+     *
+     * @see       useQuery()
+     *
+     * @param     string $relationAlias optional alias for the relation,
+     *                                   to be used as main alias in the secondary query
+     * @param     string $joinType Accepted values are null, 'left join', 'right join', 'inner join'
+     *
+     * @return   \Palettes\CoreBundle\Model\PaletteTagQuery A secondary query class using the current class as primary query
+     */
+    public function usePaletteTagQuery($relationAlias = null, $joinType = Criteria::INNER_JOIN)
+    {
+        return $this
+            ->joinPaletteTag($relationAlias, $joinType)
+            ->useQuery($relationAlias ? $relationAlias : 'PaletteTag', '\Palettes\CoreBundle\Model\PaletteTagQuery');
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Palettes\CoreBundle\Form\Type;
 
 use Propel\PropelBundle\Form\BaseAbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Palettes\CoreBundle\Form\DataTransformer\TagsListTransformer;
 
 class PaletteType extends BaseAbstractType
 {
@@ -19,5 +20,13 @@ class PaletteType extends BaseAbstractType
     {
         $builder->add('name');
         $builder->add('description');
+        
+        $tags = $builder->create('tags', 'text', [
+            'label' => 'Tags',
+            'mapped' => false
+        ]);
+        $tags->addModelTransformer(new TagsListTransformer());
+        
+        $builder->add($tags);
     }
 }

@@ -25,6 +25,17 @@
                     <h4 class="list-group-item-heading">{{ palette.name }}</h4>
                     {{ colorbar(palette.colors) }}
                     <p>{{ palette.description }}</p>
+                    
+                    {% if not palette.paletteTags is empty %}
+                    <p>
+                        {% for tag in palette.paletteTags %}
+                            <span class="label label-default">
+                                #{{ tag.tag.name }}
+                            </span> 
+                            &nbsp; 
+                        {% endfor %}
+                    </p>
+                    {% endif %}
                 </a>
                 {% endfor %}
             </div>

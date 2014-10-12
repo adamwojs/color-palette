@@ -7,7 +7,7 @@ use \TableMap;
 
 
 /**
- * This class defines the structure of the 'palette' table.
+ * This class defines the structure of the 'tag' table.
  *
  *
  *
@@ -18,13 +18,13 @@ use \TableMap;
  *
  * @package    propel.generator.src.Palettes.CoreBundle.Model.map
  */
-class PaletteTableMap extends TableMap
+class TagTableMap extends TableMap
 {
 
     /**
      * The (dot-path) name of this class
      */
-    const CLASS_NAME = 'src.Palettes.CoreBundle.Model.map.PaletteTableMap';
+    const CLASS_NAME = 'src.Palettes.CoreBundle.Model.map.TagTableMap';
 
     /**
      * Initialize the table attributes, columns and validators
@@ -36,16 +36,14 @@ class PaletteTableMap extends TableMap
     public function initialize()
     {
         // attributes
-        $this->setName('palette');
-        $this->setPhpName('Palette');
-        $this->setClassname('Palettes\\CoreBundle\\Model\\Palette');
+        $this->setName('tag');
+        $this->setPhpName('Tag');
+        $this->setClassname('Palettes\\CoreBundle\\Model\\Tag');
         $this->setPackage('src.Palettes.CoreBundle.Model');
         $this->setUseIdGenerator(true);
         // columns
         $this->addPrimaryKey('id', 'Id', 'INTEGER', true, null, null);
-        $this->addColumn('name', 'Name', 'VARCHAR', false, 256, null);
-        $this->addColumn('description', 'Description', 'VARCHAR', false, 1024, null);
-        $this->addForeignKey('user_id', 'UserId', 'INTEGER', 'user', 'id', false, null, null);
+        $this->addColumn('name', 'Name', 'VARCHAR', false, 48, null);
         // validators
     } // initialize()
 
@@ -54,9 +52,7 @@ class PaletteTableMap extends TableMap
      */
     public function buildRelations()
     {
-        $this->addRelation('User', 'Palettes\\CoreBundle\\Model\\User', RelationMap::MANY_TO_ONE, array('user_id' => 'id', ), null, null);
-        $this->addRelation('Color', 'Palettes\\CoreBundle\\Model\\Color', RelationMap::ONE_TO_MANY, array('id' => 'palette_id', ), null, null, 'Colors');
-        $this->addRelation('PaletteTag', 'Palettes\\CoreBundle\\Model\\PaletteTag', RelationMap::ONE_TO_MANY, array('id' => 'palette_id', ), null, null, 'PaletteTags');
+        $this->addRelation('PaletteTag', 'Palettes\\CoreBundle\\Model\\PaletteTag', RelationMap::ONE_TO_MANY, array('id' => 'tag_id', ), null, null, 'PaletteTags');
     } // buildRelations()
 
-} // PaletteTableMap
+} // TagTableMap

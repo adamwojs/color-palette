@@ -30,6 +30,18 @@
     {% if palette.description %}
         <p class="lead">{{ palette.description }}</p>
     {% endif %}
+
+    {% if not palette.paletteTags is empty %}
+    <p>
+        {% for tag in palette.paletteTags %}
+            <span class="label label-default">
+                #{{ tag.tag.name }}
+            </span> 
+            &nbsp; 
+        {% endfor %}
+    </p>
+    {% endif %}
+    
     
     <div class="clearfix"></div>
     
