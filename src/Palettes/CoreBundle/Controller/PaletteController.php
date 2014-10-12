@@ -72,6 +72,7 @@ class PaletteController extends Controller {
         $form->handleRequest($request);
         
         if($form->isValid()) {
+            $palette->setUser($this->getUser());
             $palette->assignTags($form->get('tags')->getData());
             $palette->save();
             
