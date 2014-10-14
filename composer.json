@@ -6,7 +6,7 @@
     "autoload": {
         "psr-0": { "": "src/", "SymfonyStandard": "app/" }
     },
-    "require": {
+    "require": { 
         "php": ">=5.3.3",
         "symfony/symfony": "2.5.*",
         "doctrine/orm": "~2.2,>=2.2.3",
@@ -19,7 +19,9 @@
         "sensio/framework-extra-bundle": "~3.0",
         "incenteev/composer-parameter-handler": "~2.0",
         "propel/propel-bundle": "1.4.1",
-        "braincrafted/bootstrap-bundle": "2.1.0"
+        "braincrafted/bootstrap-bundle": "2.1.0",
+        "friendsofsymfony/rest-bundle": "1.4.2",
+        "jms/serializer-bundle": "~0.13"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"
