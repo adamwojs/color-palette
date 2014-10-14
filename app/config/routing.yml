@@ -1,3 +1,7 @@
+palettes_api:
+    resource: "@PalettesAPIBundle/Resources/config/routing.yml"
+    prefix:   /
+
 palettes_core:
     resource: "@PalettesCoreBundle/Controller/"
     type:     annotation
