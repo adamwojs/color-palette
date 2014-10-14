@@ -1,3 +1,13 @@
-palettes_api_homepage:
-    path:     /hello/{name}
-    defaults: { _controller: PalettesAPIBundle:Default:index }
+#palettes_api_homepage:
+#    path:     /hello/{name}
+#    defaults: { _controller: PalettesAPIBundle:Default:index }
+    
+    
+palette:
+    type: rest
+    resource: Palettes\APIBundle\Controller\PaletteController
+
+color:
+    type: rest
+    parent: palette
+    resource: Palettes\APIBundle\Controller\ColorController

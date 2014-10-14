@@ -1,6 +1,7 @@
 palettes_api:
+    type: rest
+    prefix:   /api
     resource: "@PalettesAPIBundle/Resources/config/routing.yml"
-    prefix:   /
 
 palettes_core:
     resource: "@PalettesCoreBundle/Controller/"
